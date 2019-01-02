@@ -86,14 +86,25 @@ std::string CGraph::request(const std::string &resource)
 
 	headers.emplace_back(std::string("Authorization: " + config_->tokenType() + " " + config_->token()));
 
+	std::string data;
+
 	long respCode = 0;
 
-	std::string data = httpClient_.get(url, headers, respCode);
+	unsigned int retries = 3;
 
-	if (respCode == 401) {
-		refreshToken();
-		config_->readToken();
-	} else if (respCode != 200)
+	do {
+		respCode = 0;
+
+		data = httpClient_.get(url, headers, respCode);
+
+		if (respCode == 401) {
+			refreshToken();
+			config_->readToken();
+		} else if (respCode != 200)
+			throw std::runtime_error("the server responded with: " + data);
+	} while (respCode != 200 && retries-- > 0);
+
+	if (respCode != 200)
 		throw std::runtime_error("the server responded with: " + data);
 
 	return data;
@@ -107,14 +118,23 @@ void CGraph::request(const std::string &resource, std::ofstream &file)
 
 	headers.emplace_back(std::string("Authorization: " + config_->tokenType() + " " + config_->token()));
 
-	long respCode = 0;
+	long respCode;
 
-	httpClient_.download(url, headers, file, respCode);
+	unsigned int retries = 3;
 
-	if (respCode == 401) {
-		refreshToken();
-		config_->readToken();
-	} else if (respCode != 200)
+	do {
+		respCode = 0;
+
+		httpClient_.download(url, headers, file, respCode);
+
+		if (respCode == 401) {
+			refreshToken();
+			config_->readToken();
+		} else if (respCode != 200)
+			throw std::runtime_error("HTTP error while downloading: " + std::to_string(respCode));
+	} while (respCode != 200 && retries-- > 0);
+
+	if (respCode != 200)
 		throw std::runtime_error("HTTP error while downloading: " + std::to_string(respCode));
 }
 
