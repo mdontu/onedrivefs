@@ -82,10 +82,6 @@ std::string CGraph::request(const std::string &resource)
 {
 	std::string url = "https://graph.microsoft.com/v1.0" + resource;
 
-	std::list<std::string> headers;
-
-	headers.emplace_back(std::string("Authorization: " + config_->tokenType() + " " + config_->token()));
-
 	std::string data;
 
 	long respCode = 0;
@@ -93,6 +89,10 @@ std::string CGraph::request(const std::string &resource)
 	unsigned int retries = 3;
 
 	do {
+		std::list<std::string> headers;
+
+		headers.emplace_back(std::string("Authorization: " + config_->tokenType() + " " + config_->token()));
+
 		respCode = 0;
 
 		data = httpClient_.get(url, headers, respCode);
@@ -114,15 +114,15 @@ void CGraph::request(const std::string &resource, std::ofstream &file)
 {
 	std::string url = "https://graph.microsoft.com/v1.0" + resource;
 
-	std::list<std::string> headers;
-
-	headers.emplace_back(std::string("Authorization: " + config_->tokenType() + " " + config_->token()));
-
 	long respCode;
 
 	unsigned int retries = 3;
 
 	do {
+		std::list<std::string> headers;
+
+		headers.emplace_back(std::string("Authorization: " + config_->tokenType() + " " + config_->token()));
+
 		respCode = 0;
 
 		httpClient_.download(url, headers, file, respCode);
