@@ -9,7 +9,7 @@ LIBS := -lcurl -ljsoncpp
 SRCS := $(wildcard src/*.cpp)
 OBJS := $(patsubst %.cpp, %.o, $(SRCS))
 
-TARGET := onedrive
+TARGET := onedrivefs
 
 first: all
 
