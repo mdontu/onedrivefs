@@ -2,3 +2,4 @@ config.json
 token.json
 *.o
 onedrivefs
+build
