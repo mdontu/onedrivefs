@@ -96,7 +96,6 @@ void COneDrive::drives(std::list<CDrive> &drives)
 
 		drives.push_back(drive);
 	}
-
 }
 
 void COneDrive::listChildren(std::list<CDriveItem> &driveItems)
@@ -238,6 +237,13 @@ size_t COneDrive::read(const CDriveItem &driveItem, void *buf, size_t size, off_
 	std::lock_guard<std::mutex> lock(mutex_);
 
 	return graph_.request(driveItem.url(), buf, size, offset);
+}
+
+void COneDrive::deleteItem(const CDriveItem &driveItem)
+{
+	std::lock_guard<std::mutex> lock(mutex_);
+
+	graph_.deleteRequest("/me/drive/items/" + driveItem.id());
 }
 
 CDriveItem COneDrive::queryCache(const std::string &path)

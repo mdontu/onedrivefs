@@ -34,6 +34,9 @@ public:
 	void download(const std::string &url, const std::list<std::string> &headers,
 		      std::ofstream &file, long &respCode);
 
+	void deleteRequest(const std::string &url, const std::list<std::string> &headers,
+			   long &respCode);
+
 	std::string escape(const std::string &str);
 
 	std::string buildUrl(const std::string &url,

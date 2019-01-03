@@ -338,6 +338,8 @@ public:
 
 	size_t read(const CDriveItem &driveItem, void *buf, size_t size, off_t offset);
 
+	void deleteItem(const CDriveItem &driveItem);
+
 	CDriveItem queryCache(const std::string &path);
 
 	void cache(const std::string &path, CDriveItem &driveItem);

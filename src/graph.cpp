@@ -170,4 +170,32 @@ size_t CGraph::request(const std::string &url, void *buf, size_t size, off_t off
 	return ret;
 }
 
+void CGraph::deleteRequest(const std::string &resource)
+{
+	std::string url = "https://graph.microsoft.com/v1.0" + resource;
+
+	long respCode;
+
+	unsigned int retries = 3;
+
+	do {
+		std::list<std::string> headers;
+
+		headers.emplace_back(std::string("Authorization: " + gConfig.tokenType() + " " + gConfig.token()));
+
+		respCode = 0;
+
+		httpClient_.deleteRequest(url, headers, respCode);
+
+		if (respCode == 401) {
+			refreshToken();
+			gConfig.readToken();
+		} else if (respCode != 204)
+			throw std::runtime_error("HTTP error while downloading: " + std::to_string(respCode));
+	} while (respCode == 401 && retries-- > 0);
+
+	if (respCode != 204)
+		throw std::runtime_error("HTTP error while downloading: " + std::to_string(respCode));
+}
+
 } // namespace OneDrive

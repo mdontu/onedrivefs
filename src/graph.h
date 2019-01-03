@@ -31,6 +31,8 @@ public:
 
 	size_t request(const std::string &url, void *buf, size_t size, off_t offset);
 
+	void deleteRequest(const std::string &resource);
+
 private:
 	CCurl httpClient_;
 

@@ -193,6 +193,30 @@ void CCurl::download(const std::string &url, const std::list<std::string> &heade
 	respCode = perform();
 }
 
+void CCurl::deleteRequest(const std::string &url, const std::list<std::string> &headers,
+			  long &respCode)
+{
+	struct curl_slist *slist = nullptr;
+
+	for (auto &&h : headers)
+		slist = curl_slist_append(slist, h.c_str());
+
+	std::unique_ptr<struct curl_slist, decltype(&curl_slist_free_all)> sp(slist, &curl_slist_free_all);
+
+	setopt(CURLOPT_HTTPHEADER, slist);
+
+	setopt(CURLOPT_CUSTOMREQUEST, "DELETE");
+	setopt(CURLOPT_URL, url);
+
+	setopt(CURLOPT_SSL_VERIFYPEER, 1);
+	setopt(CURLOPT_SSL_VERIFYHOST, 2);
+	setopt(CURLOPT_TIMEOUT, 10);
+	setopt(CURLOPT_CONNECTTIMEOUT, 30);
+	setopt(CURLOPT_FOLLOWLOCATION, 1);
+
+	respCode = perform();
+}
+
 long CCurl::perform()
 {
 	CURLcode err = curl_easy_perform(handle_);
