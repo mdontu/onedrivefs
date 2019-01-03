@@ -5,6 +5,7 @@
 
 #include <fstream>
 #include <list>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -210,7 +211,7 @@ public:
 
 	CDriveItem(const CDriveItem &driveItem): id_{driveItem.id_}, name_{driveItem.name_},
 		size_{driveItem.size_}, createTime_{driveItem.createTime_}, modifiedTime_{driveItem.modifiedTime_},
-		url_{driveItem.url_}, type_{driveItem.type_}, hash_{driveItem.hash_}
+		url_{driveItem.url_}, type_{driveItem.type_}, hash_{driveItem.hash_}, cacheTime_{driveItem.cacheTime_}
 	{
 	}
 
@@ -224,6 +225,7 @@ public:
 		url_          = driveItem.url_;
 		type_         = driveItem.type_;
 		hash_         = driveItem.hash_;
+		cacheTime_    = driveItem.cacheTime_;
 
 		return *this;
 	}
@@ -282,6 +284,16 @@ public:
 		hash_ = hash;
 	}
 
+	time_t cacheTime() const
+	{
+		return cacheTime_;
+	}
+
+	void setCacheTime(time_t cacheTime)
+	{
+		cacheTime_ = cacheTime;
+	}
+
 private:
 	std::string   id_;
 	std::string   name_;
@@ -291,6 +303,7 @@ private:
 	std::string   url_;
 	DriveItemType type_{DRIVE_ITEM_UNKNOWN};
 	std::string   hash_;
+	time_t        cacheTime_;
 };
 
 class COneDrive
@@ -325,9 +338,21 @@ public:
 
 	size_t read(const CDriveItem &driveItem, void *buf, size_t size, off_t offset);
 
+	CDriveItem queryCache(const std::string &path);
+
+	void cache(const std::string &path, CDriveItem &driveItem);
+
+	void cacheLocked(const std::string &path, CDriveItem &driveItem)
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+
+		cache(path, driveItem);
+	}
+
 private:
-	CGraph     graph_;
-	std::mutex mutex_;
+	CGraph                            graph_;
+	std::mutex                        mutex_;
+	std::map<std::size_t, CDriveItem> cache_;
 };
 
 } // namespace OneDrive

@@ -147,6 +147,12 @@ int CFuse::fuseReadDir(const char *path, void *buf, fuse_fill_dir_t fillDir,
 			oneDrive->driveItemTime(i.modifiedTime(), st.st_mtim);
 			st.st_atim = st.st_mtim;
 
+			std::string fpath(path);
+			if (fpath == "/")
+				oneDrive->cacheLocked(fpath + i.name(), i);
+			else
+				oneDrive->cacheLocked(fpath + "/" + i.name(), i);
+
 			if (fillDir(buf, i.name().c_str(), &st, 0))
 				break;
 		}

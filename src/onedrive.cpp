@@ -2,6 +2,7 @@
 
 #include <ctime>
 #include <json/json.h>
+#include <chrono>
 #include <iostream>
 #include <sstream>
 #include "onedrive.h"
@@ -168,11 +169,21 @@ CDriveItem COneDrive::root()
 
 CDriveItem COneDrive::itemFromPath(const std::string &path)
 {
+	CDriveItem driveItem;
+
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+
+		driveItem = queryCache(path);
+		if (driveItem.type() != CDriveItem::DRIVE_ITEM_UNKNOWN)
+			return driveItem;
+	}
+
 	std::list<std::string> items;
 
 	stringSplit(path, '/', items);
 
-	CDriveItem driveItem = root();
+	driveItem = root();
 
 	for (auto &&i : items) {
 		bool found = false;
@@ -196,6 +207,12 @@ CDriveItem COneDrive::itemFromPath(const std::string &path)
 			return CDriveItem();
 	}
 
+	{
+		std::lock_guard<std::mutex> lock(mutex_);
+
+		cache(path, driveItem);
+	}
+
 	return driveItem;
 }
 
@@ -215,6 +232,36 @@ size_t COneDrive::read(const CDriveItem &driveItem, void *buf, size_t size, off_
 	std::lock_guard<std::mutex> lock(mutex_);
 
 	return graph_.request(driveItem.url(), buf, size, offset);
+}
+
+CDriveItem COneDrive::queryCache(const std::string &path)
+{
+	time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+	std::size_t hash = std::hash<std::string>{}(path);
+
+	auto driveItem = cache_.find(hash);
+
+	if (driveItem == cache_.end())
+		return CDriveItem();
+
+	if (driveItem->second.cacheTime() > now || (now - driveItem->second.cacheTime()) > 30) {
+		cache_.erase(driveItem);
+		return CDriveItem();
+	}
+
+	return driveItem->second;
+}
+
+void COneDrive::cache(const std::string &path, CDriveItem &driveItem)
+{
+	time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+	std::size_t hash = std::hash<std::string>{}(path);
+
+	driveItem.setCacheTime(now);
+
+	cache_[hash] = driveItem;
 }
 
 } // namespace OneDrive
