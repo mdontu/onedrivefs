@@ -4,6 +4,7 @@
 #include <fstream>
 #include <list>
 #include <memory>
+#include <mutex>
 #include <string>
 #include "graph.h"
 
@@ -285,9 +286,8 @@ private:
 class COneDrive
 {
 public:
-	COneDrive(AppConfigPtr &&config)
+	COneDrive()
 	{
-		graph_.init(std::move(config));
 	}
 
 	~COneDrive()
@@ -307,8 +307,15 @@ public:
 
 	void download(const CDriveItem &driveItem, std::ofstream &file);
 
+	CDriveItem root();
+
+	CDriveItem itemFromPath(const std::string &path);
+
+	void driveItemTime(const std::string &s, struct timespec &ts);
+
 private:
-	CGraph graph_;
+	CGraph     graph_;
+	std::mutex mutex_;
 };
 
 } // namespace OneDrive

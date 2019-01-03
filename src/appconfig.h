@@ -9,7 +9,9 @@ namespace OneDrive {
 class CAppConfig
 {
 public:
-	CAppConfig();
+	CAppConfig()
+	{
+	}
 
 	~CAppConfig()
 	{
@@ -17,6 +19,12 @@ public:
 
 	CAppConfig(const CAppConfig &) = delete;
 	CAppConfig & operator=(const CAppConfig &) = delete;
+
+	void init()
+	{
+		readConfig();
+		readToken();
+	}
 
 	void readConfig();
 
@@ -82,6 +90,13 @@ public:
 		return refreshToken_;
 	}
 
+	std::string configDir() const
+	{
+		return configDir_;
+	}
+
+	void setConfigDir(const std::string &configDir);
+
 private:
 	std::string authorityUrl_;
 	std::string authEndpoint_;
@@ -96,10 +111,12 @@ private:
 	std::string tokenExtExpires_;
 	std::string token_;
 	std::string refreshToken_;
+
+	std::string configDir_;
 };
 
-using AppConfigPtr = std::unique_ptr<CAppConfig>;
-
 } // namespace OneDrive
+
+extern OneDrive::CAppConfig gConfig;
 
 #endif // __APPCONFIG_H_INCLUDED__

@@ -86,7 +86,6 @@ std::string CCurl::get(const std::string &url, const std::list<std::string> &hea
 	setopt(CURLOPT_SSL_VERIFYHOST, 2);
 	setopt(CURLOPT_TIMEOUT, 10);
 	setopt(CURLOPT_CONNECTTIMEOUT, 30);
-	//setopt(CURLOPT_VERBOSE, 1);
 	setopt(CURLOPT_FOLLOWLOCATION, 1);
 
 	respCode = perform();
@@ -119,7 +118,6 @@ std::string CCurl::post(const std::string &url, const std::list<std::string> &he
 	setopt(CURLOPT_SSL_VERIFYHOST, 2);
 	setopt(CURLOPT_TIMEOUT, 10);
 	setopt(CURLOPT_CONNECTTIMEOUT, 30);
-	//setopt(CURLOPT_VERBOSE, 1);
 	setopt(CURLOPT_FOLLOWLOCATION, 1);
 
 	respCode = perform();
@@ -149,7 +147,6 @@ void CCurl::download(const std::string &url, const std::list<std::string> &heade
 	setopt(CURLOPT_SSL_VERIFYHOST, 2);
 	setopt(CURLOPT_TIMEOUT, 10);
 	setopt(CURLOPT_CONNECTTIMEOUT, 30);
-	//setopt(CURLOPT_VERBOSE, 1);
 	setopt(CURLOPT_FOLLOWLOCATION, 1);
 
 	respCode = perform();

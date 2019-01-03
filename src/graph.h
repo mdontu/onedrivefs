@@ -21,15 +21,14 @@ public:
 	CGraph(const CGraph &) = delete;
 	CGraph & operator=(const CGraph &) = delete;
 
-	void init(AppConfigPtr &&config);
+	void init();
 
 	std::string request(const std::string &resource);
 
 	void request(const std::string &resource, std::ofstream &file);
 
 private:
-	AppConfigPtr config_;
-	CCurl        httpClient_;
+	CCurl httpClient_;
 
 	void refreshToken();
 };

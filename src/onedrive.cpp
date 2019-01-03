@@ -1,7 +1,10 @@
+#include <ctime>
 #include <json/json.h>
 #include <iostream>
 #include <sstream>
 #include "onedrive.h"
+#include "log.h"
+#include "utils.h"
 
 namespace {
 
@@ -47,6 +50,8 @@ namespace OneDrive {
 
 CDrive COneDrive::drive()
 {
+	std::lock_guard<std::mutex> lock(mutex_);
+
 	std::stringstream data;
 
 	data << graph_.request("/me/drive");
@@ -66,6 +71,8 @@ CDrive COneDrive::drive()
 
 void COneDrive::drives(std::list<CDrive> &drives)
 {
+	std::lock_guard<std::mutex> lock(mutex_);
+
 	std::stringstream data;
 
 	data << graph_.request("/me/drives");
@@ -90,6 +97,8 @@ void COneDrive::drives(std::list<CDrive> &drives)
 
 void COneDrive::listChildren(std::list<CDriveItem> &driveItems)
 {
+	std::lock_guard<std::mutex> lock(mutex_);
+
 	std::stringstream data;
 
 	data << graph_.request("/me/drive/root/children");
@@ -103,12 +112,16 @@ void COneDrive::listChildren(std::list<CDriveItem> &driveItems)
 
 		CDriveItem driveItem(driveItemFromJson(node));
 
-		driveItems.push_back(driveItem);
+		if (driveItem.type() == CDriveItem::DRIVE_ITEM_FILE ||
+		    driveItem.type() == CDriveItem::DRIVE_ITEM_FOLDER)
+			driveItems.push_back(driveItem);
 	}
 }
 
 void COneDrive::listChildren(const CDriveItem &driveItem, std::list<CDriveItem> &driveItems)
 {
+	std::lock_guard<std::mutex> lock(mutex_);
+
 	std::stringstream data;
 
 	data << graph_.request("/me/drive/items/" + driveItem.id() + "/children");
@@ -122,13 +135,71 @@ void COneDrive::listChildren(const CDriveItem &driveItem, std::list<CDriveItem> 
 
 		CDriveItem driveItem(driveItemFromJson(node));
 
-		driveItems.push_back(driveItem);
+		if (driveItem.type() == CDriveItem::DRIVE_ITEM_FILE ||
+		    driveItem.type() == CDriveItem::DRIVE_ITEM_FOLDER)
+			driveItems.push_back(driveItem);
 	}
 }
 
 void COneDrive::download(const CDriveItem &driveItem, std::ofstream &file)
 {
+	std::lock_guard<std::mutex> lock(mutex_);
+
 	graph_.request("/me/drive/items/" + driveItem.id() + "/content", file);
+}
+
+CDriveItem COneDrive::root()
+{
+	std::lock_guard<std::mutex> lock(mutex_);
+
+	std::stringstream data;
+
+	data << graph_.request("/me/drive/root");
+
+	Json::Value root;
+
+	data >> root;
+
+	return CDriveItem(driveItemFromJson(root));
+}
+
+CDriveItem COneDrive::itemFromPath(const std::string &path)
+{
+	std::list<std::string> items;
+
+	stringSplit(path, '/', items);
+
+	CDriveItem driveItem = root();
+
+	for (auto &&i : items) {
+		if (i.empty())
+			continue;
+
+		std::list<CDriveItem> driveItems;
+
+		listChildren(driveItem, driveItems);
+
+		for (auto &&j : driveItems) {
+			if (j.name() == i) {
+				driveItem = j;
+				break;
+			}
+		}
+
+	}
+
+	return driveItem;
+}
+
+// The source timestamp looks like this: 2009-05-06T23:31:32.193Z
+void COneDrive::driveItemTime(const std::string &s, struct timespec &ts)
+{
+	struct tm tm{};
+
+	strptime(s.c_str(), "%FT%T", &tm);
+
+	ts.tv_sec = std::mktime(&tm);
+	ts.tv_nsec = 0;
 }
 
 } // namespace OneDrive

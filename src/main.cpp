@@ -3,91 +3,38 @@
 #include <memory>
 #include <stdexcept>
 #include "appconfig.h"
-#include "onedrive.h"
+#include "fuse.h"
+#include "log.h"
 
 using namespace OneDrive;
 
-int main()
+CAppConfig gConfig;
+CLog gLog;
+
+int main(int argc, const char *argv[])
 {
 	bool success = true;
 
 	try {
-		std::unique_ptr<CAppConfig> config = std::make_unique<CAppConfig>();
-		COneDrive oneDrive(std::move(config));
+		const char *home = getenv("HOME");
 
-		CDrive drive = oneDrive.drive();
+		if (!home)
+			throw std::runtime_error("could not determine the user home directory");
 
-		std::cout << "Drive ID: " << drive.id() << std::endl;
-		std::cout << "Quota remaining: " << drive.quota().remaining() << std::endl;
+		gConfig.setConfigDir(std::string(home) + "/.config/onedrivefs");
+		gConfig.init();
 
-		std::list<CDrive> drives;
+		gLog.init("onedrivefs.log");
 
-		oneDrive.drives(drives);
+		CFuse fuse;
 
-		std::cout << "Found " << drives.size() << " drive(s)" << std::endl;
-
-		for (auto &&i : drives) {
-			std::cout << "\tDrive ID: " << i.id() << std::endl;
-			std::cout << "\tOwner: " << i.owner().displayName() << std::endl;
-			std::cout << "\tQuota remaining: " << i.quota().remaining() << std::endl;
-		}
-
-		std::cout << std::endl;
-
-		std::list<CDriveItem> driveItems;
-
-		oneDrive.listChildren(driveItems);
-
-		std::cout << "Found " << driveItems.size() << " drive item(s)" << std::endl;
-
-		for (auto &&i : driveItems) {
-			std::cout << "\tItem ID: " << i.id() << std::endl;
-			std::cout << "\tItem name: " << i.name() << std::endl;
-			std::cout << "\tItem size: " << i.size() << std::endl;
-			std::cout << "\tItem create time: " << i.createTime() << std::endl;
-			std::cout << "\tItem modified time: " << i.modifiedTime() << std::endl;
-
-			if (i.type() == OneDrive::CDriveItem::DRIVE_ITEM_FOLDER)
-				std::cout << "\tItem type: folder" << std::endl;
-			else
-				std::cout << "\tItem type: file, sha1: " << i.hash() << std::endl;
-		}
-
-		std::cout << std::endl;
-
-		bool downloaded = false;
-
-		for (auto &&i : driveItems) {
-			std::cout << "\tItem name: " << i.name() << std::endl;
-
-			std::list<CDriveItem> childDriveItems;
-
-			oneDrive.listChildren(i, childDriveItems);
-
-			for (auto &&j : childDriveItems) {
-				std::cout << "\t\tItem name: " << j.name() << std::endl;
-
-				if (j.type() == OneDrive::CDriveItem::DRIVE_ITEM_FOLDER)
-					std::cout << "\t\tItem type: folder" << std::endl;
-				else {
-					std::cout << "\t\tItem type: file, sha1: " << j.hash() << std::endl;
-
-					if (!downloaded) {
-						downloaded = true;
-
-						std::ofstream f(j.name(), std::ios::binary);
-
-						oneDrive.download(j, f);
-
-					}
-				}
-			}
-		}
+		if (fuse.init(argc, argv) < 0)
+			success = false;
 	} catch (const std::exception &e) {
 		std::cerr << "Error: " << e.what() << std::endl;
 		success = false;
 	} catch (...) {
-		std::cerr << "Error: un unknown exception has occurred" << std::endl;
+		std::cerr << "Error: an unknown exception has occurred" << std::endl;
 		success = false;
 	}
 

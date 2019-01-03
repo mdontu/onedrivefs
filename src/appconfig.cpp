@@ -1,22 +1,47 @@
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <json/json.h>
+#include <cerrno>
+#include <cstring>
 #include <fstream>
 #include <stdexcept>
 #include "appconfig.h"
+#include "utils.h"
 
 namespace OneDrive {
 
-CAppConfig::CAppConfig()
+void CAppConfig::setConfigDir(const std::string &configDir)
 {
-	readConfig();
-	readToken();
+	configDir_ = configDir;
+
+	std::list<std::string> pathMembers;
+
+	stringSplit(configDir_, '/', pathMembers);
+
+	std::string path;
+
+	for (auto &&pm : pathMembers) {
+		struct stat st{};
+
+		path += "/" + pm;
+
+		if (stat(path.c_str(), &st) == -1) {
+			if (errno != ENOENT)
+				throw std::runtime_error(std::string("stat() has failed: ") + std::strerror(errno));
+			if (mkdir(path.c_str(), 0755) < 0)
+				throw std::runtime_error(std::string("mkdir() has failed: ") + std::strerror(errno));
+		}
+	}
 }
 
 void CAppConfig::readConfig()
 {
-	std::ifstream f("config.json", std::ios::binary);
+	const std::string cfg = configDir_ + "/config.json";
+
+	std::ifstream f(cfg, std::ios::binary);
 
 	if (!f)
-		throw std::runtime_error("failed to read the configuration file");
+		throw std::runtime_error("failed to read the configuration file " + cfg);
 
 	Json::Value root;
 
@@ -52,7 +77,7 @@ void CAppConfig::readConfig()
 
 void CAppConfig::readToken()
 {
-	std::ifstream f("token.json", std::ios::binary);
+	std::ifstream f(configDir_ + "/token.json", std::ios::binary);
 
 	if (!f)
 		return;
