@@ -160,11 +160,11 @@ size_t CGraph::request(const std::string &url, void *buf, size_t size, off_t off
 		if (respCode == 401) {
 			refreshToken();
 			gConfig.readToken();
-		} else if (respCode != 206)
+		} else if (respCode != 206 && respCode != 416)
 			throw std::runtime_error("HTTP error while downloading: " + std::to_string(respCode));
-	} while (respCode != 206 && retries-- > 0);
+	} while (respCode == 401 && retries-- > 0);
 
-	if (respCode != 206)
+	if (respCode != 206 && respCode != 416)
 		throw std::runtime_error("HTTP error while downloading: " + std::to_string(respCode));
 
 	return ret;
