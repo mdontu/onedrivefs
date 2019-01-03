@@ -27,7 +27,7 @@ void CAppConfig::setConfigDir(const std::string &configDir)
 
 		path += "/" + pm;
 
-		if (stat(path.c_str(), &st) == -1) {
+		if (stat(path.c_str(), &st) < 0) {
 			if (errno != ENOENT)
 				throw std::runtime_error(std::string("stat() has failed: ") + std::strerror(errno));
 			if (mkdir(path.c_str(), 0755) < 0)
