@@ -248,9 +248,15 @@ void COneDrive::deleteItem(const CDriveItem &driveItem)
 
 void COneDrive::truncateItem(const CDriveItem &driveItem, off_t offset)
 {
+	// The following request is limited to 4MiB
+	if (offset > 4194304)
+		offset = 4194304;
+
+	std::string body(offset, '\0');
+
 	std::lock_guard<std::mutex> lock(mutex_);
 
-	graph_.upload("/me/drive/items/" + driveItem.id() + "/content", "");
+	graph_.upload("/me/drive/items/" + driveItem.id() + "/content", body);
 }
 
 CDriveItem COneDrive::queryCache(const std::string &path)
