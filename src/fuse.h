@@ -41,6 +41,8 @@ private:
 	static int fuseListXAttr(const char *path, char *buf, size_t size);
 
 	static int fuseGetXAttr(const char *path, const char *name, char *buf, size_t size);
+
+	static int fuseStatFs(const char *path, struct statvfs *st);
 };
 
 } // namespace OneDrive

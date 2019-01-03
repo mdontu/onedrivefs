@@ -24,6 +24,7 @@ CFuse::CFuse()
 	fuseOps_.readdir   = fuseReadDir;
 	fuseOps_.listxattr = fuseListXAttr;
 	fuseOps_.getxattr  = fuseGetXAttr;
+	fuseOps_.statfs    = fuseStatFs;
 }
 
 CFuse::~CFuse()
@@ -219,6 +220,33 @@ int CFuse::fuseGetXAttr(const char *path, const char *name, char *buf, size_t si
 			err = driveItem.hash().length();
 		else
 			err = snprintf(buf, size, "%s", driveItem.hash().c_str());
+	} catch (const std::exception &e) {
+		LOG_ERROR("an exception was caught: " << e.what());
+		err = -EIO;
+	} catch (...) {
+		LOG_ERROR("an unknown exception was caught");
+		err = -EIO;
+	}
+
+	return err;
+}
+
+int CFuse::fuseStatFs(const char *path, struct statvfs *st)
+{
+	int err = 0;
+	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
+
+	try {
+		CDrive drive = oneDrive->drive();
+
+		std::memset(st, 0, sizeof(*st));
+
+		st->f_bsize = 4096;
+		st->f_frsize = 4096;
+		st->f_blocks = std::stoll(drive.quota().total()) / st->f_frsize;
+		st->f_bfree = (std::stoll(drive.quota().total()) - std::stoll(drive.quota().used())) / st->f_bsize;
+		st->f_bavail = st->f_bfree;
+		st->f_namemax = 1024;
 	} catch (const std::exception &e) {
 		LOG_ERROR("an exception was caught: " << e.what());
 		err = -EIO;
