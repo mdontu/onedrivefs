@@ -102,7 +102,7 @@ std::string CCurl::get(const std::string &url, const std::list<std::string> &hea
 }
 
 size_t CCurl::get(const std::string &url, const std::list<std::string> &headers,
-		void *buf, size_t size, long &respCode)
+		  void *buf, size_t size, long &respCode)
 {
 	struct curl_slist *slist = nullptr;
 
