@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0
+
 #ifndef __GRAPH_H_INCLUDED__
 #define __GRAPH_H_INCLUDED__
 

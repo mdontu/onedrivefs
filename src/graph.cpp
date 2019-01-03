@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0
+
 #include <fstream>
 #include "curl.h"
 #include "graph.h"

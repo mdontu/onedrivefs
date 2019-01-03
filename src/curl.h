@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0
+
 #ifndef __CURL_H_INCLUDED__
 #define __CURL_H_INCLUDED__
 

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <json/json.h>

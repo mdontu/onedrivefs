@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0
+
 #include <ctime>
 #include <json/json.h>
 #include <iostream>
