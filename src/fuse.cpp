@@ -46,7 +46,19 @@ int CFuse::init(int argc, const char *argv[])
 
 void *CFuse::fuseInit(struct fuse_conn_info * /*conn*/)
 {
-	return new COneDrive;
+	COneDrive *oneDrive;
+
+	try {
+		oneDrive = new COneDrive();
+	} catch (const std::exception &e) {
+		LOG_ERROR("failed to create a COneDrive instance: " << e.what());
+		oneDrive = nullptr;
+	} catch (...) {
+		LOG_ERROR("failed to create a COneDrive instance: unknown exception");
+		oneDrive = nullptr;
+	}
+
+	return oneDrive;
 }
 
 void CFuse::fuseDestroy(void *ptr)
@@ -58,6 +70,9 @@ int CFuse::fuseGetAttr(const char *path, struct stat *st)
 {
 	int err = 0;
 	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
+
+	if (!oneDrive)
+		return -EIO;
 
 	try {
 		CDriveItem driveItem = oneDrive->itemFromPath(path);
@@ -96,6 +111,9 @@ int CFuse::fuseOpen(const char *path, struct fuse_file_info * /*fileInfo*/)
 	int err = 0;
 	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
 
+	if (!oneDrive)
+		return -EIO;
+
 	try {
 		CDriveItem driveItem = oneDrive->itemFromPath(path);
 
@@ -122,6 +140,9 @@ int CFuse::fuseReadDir(const char *path, void *buf, fuse_fill_dir_t fillDir,
 {
 	int err = 0;
 	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
+
+	if (!oneDrive)
+		return -EIO;
 
 	try {
 		CDriveItem driveItem = oneDrive->itemFromPath(path);
@@ -175,6 +196,9 @@ int CFuse::fuseListXAttr(const char *path, char *buf, size_t size)
 	int err = 0;
 	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
 
+	if (!oneDrive)
+		return -EIO;
+
 	try {
 		CDriveItem driveItem = oneDrive->itemFromPath(path);
 
@@ -211,6 +235,9 @@ int CFuse::fuseGetXAttr(const char *path, const char *name, char *buf, size_t si
 	int err = 0;
 	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
 
+	if (!oneDrive)
+		return -EIO;
+
 	try {
 		if (strcmp(name, userHashAttr))
 			return -ENODATA;
@@ -246,6 +273,9 @@ int CFuse::fuseStatFs(const char *path, struct statvfs *st)
 	int err = 0;
 	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
 
+	if (!oneDrive)
+		return -EIO;
+
 	try {
 		CDrive drive = oneDrive->drive();
 
@@ -274,6 +304,9 @@ int CFuse::fuseRead(const char *path, char *buf, size_t size, off_t offset,
 	int err = 0;
 	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
 
+	if (!oneDrive)
+		return -EIO;
+
 	try {
 		CDriveItem driveItem = oneDrive->itemFromPath(path);
 
@@ -300,6 +333,9 @@ int CFuse::fuseUnlink(const char *path)
 	int err = 0;
 	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
 
+	if (!oneDrive)
+		return -EIO;
+
 	try {
 		CDriveItem driveItem = oneDrive->itemFromPath(path);
 
@@ -325,6 +361,9 @@ int CFuse::fuseRmDir(const char *path)
 {
 	int err = 0;
 	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
+
+	if (!oneDrive)
+		return -EIO;
 
 	try {
 		CDriveItem driveItem = oneDrive->itemFromPath(path);
@@ -358,6 +397,9 @@ int CFuse::fuseFtruncate(const char *path, off_t offset, struct fuse_file_info *
 {
 	int err = 0;
 	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
+
+	if (!oneDrive)
+		return -EIO;
 
 	try {
 		CDriveItem driveItem = oneDrive->itemFromPath(path);

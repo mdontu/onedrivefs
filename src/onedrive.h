@@ -311,6 +311,7 @@ class COneDrive
 public:
 	COneDrive()
 	{
+		graph_.init();
 	}
 
 	~COneDrive()
