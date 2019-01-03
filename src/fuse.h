@@ -50,6 +50,8 @@ private:
 	static int fuseUnlink(const char *path);
 
 	static int fuseRmDir(const char *path);
+
+	static int fuseFtruncate(const char *path, off_t offset, struct fuse_file_info *fileInfo);
 };
 
 } // namespace OneDrive

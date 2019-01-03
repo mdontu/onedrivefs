@@ -246,6 +246,13 @@ void COneDrive::deleteItem(const CDriveItem &driveItem)
 	graph_.deleteRequest("/me/drive/items/" + driveItem.id());
 }
 
+void COneDrive::truncateItem(const CDriveItem &driveItem, off_t offset)
+{
+	std::lock_guard<std::mutex> lock(mutex_);
+
+	graph_.upload("/me/drive/items/" + driveItem.id() + "/content", "");
+}
+
 CDriveItem COneDrive::queryCache(const std::string &path)
 {
 	time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());

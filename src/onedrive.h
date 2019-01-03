@@ -340,6 +340,8 @@ public:
 
 	void deleteItem(const CDriveItem &driveItem);
 
+	void truncateItem(const CDriveItem &driveItem, off_t offset);
+
 	CDriveItem queryCache(const std::string &path);
 
 	void cache(const std::string &path, CDriveItem &driveItem);
