@@ -132,7 +132,7 @@ int CFuse::fuseOpen(const char *path, struct fuse_file_info * /*fileInfo*/)
 
 int CFuse::fuseRelease(const char * /*path*/, struct fuse_file_info * /*fileInfo*/)
 {
-	return -ENOSYS;
+	return 0;
 }
 
 int CFuse::fuseReadDir(const char *path, void *buf, fuse_fill_dir_t fillDir,
