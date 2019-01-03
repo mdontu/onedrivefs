@@ -8,7 +8,7 @@
 
 namespace {
 
-const char userHashAttr[] = "user.hash";
+const char userHashAttr[] = "user.hash.sha1";
 
 } // anonymouse namespace
 
