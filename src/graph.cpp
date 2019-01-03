@@ -198,6 +198,35 @@ void CGraph::deleteRequest(const std::string &resource)
 		throw std::runtime_error("HTTP error while deleting: " + std::to_string(respCode));
 }
 
+void CGraph::patchRequest(const std::string &resource, const std::string &body)
+{
+	std::string url = "https://graph.microsoft.com/v1.0" + resource;
+
+	long respCode;
+
+	unsigned int retries = 3;
+
+	do {
+		std::list<std::string> headers;
+
+		headers.emplace_back(std::string("Authorization: " + gConfig.tokenType() + " " + gConfig.token()));
+		headers.emplace_back(std::string("Content-Type: application/json"));
+
+		respCode = 0;
+
+		httpClient_.patchRequest(url, headers, body, respCode);
+
+		if (respCode == 401) {
+			refreshToken();
+			gConfig.readToken();
+		} else if (respCode != 200)
+			throw std::runtime_error("HTTP error while patching: " + std::to_string(respCode));
+	} while (respCode == 401 && retries-- > 0);
+
+	if (respCode != 200)
+		throw std::runtime_error("HTTP error while patching: " + std::to_string(respCode));
+}
+
 void CGraph::upload(const std::string &resource, const std::string &body)
 {
 	std::string url = "https://graph.microsoft.com/v1.0" + resource;

@@ -33,6 +33,8 @@ public:
 
 	void deleteRequest(const std::string &resource);
 
+	void patchRequest(const std::string &resource, const std::string &body);
+
 	void upload(const std::string &resource, const std::string &body);
 
 private:

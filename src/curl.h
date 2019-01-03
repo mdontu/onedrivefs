@@ -37,6 +37,9 @@ public:
 	void deleteRequest(const std::string &url, const std::list<std::string> &headers,
 			   long &respCode);
 
+	void patchRequest(const std::string &url, const std::list<std::string> &headers,
+			  const std::string &body, long &respCode);
+
 	void putRequest(const std::string &url, const std::list<std::string> &headers,
 			const std::string &body, long &respCode);
 
