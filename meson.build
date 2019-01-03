@@ -1,5 +1,5 @@
 project('onedrivefs', 'cpp',
-        default_options : ['buildtype=release', 'b_pie=true', 'b_lto=true'])
+        default_options : ['buildtype=release', 'b_pie=true', 'b_lto=true', 'cpp_std=c++11'])
 
 add_project_arguments(['-fno-strict-aliasing',
                        '-fvisibility-inlines-hidden',
