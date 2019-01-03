@@ -29,6 +29,7 @@ CFuse::CFuse()
 	fuseOps_.unlink    = fuseUnlink;
 	fuseOps_.rmdir     = fuseRmDir;
 	fuseOps_.ftruncate = fuseFtruncate;
+	fuseOps_.mkdir     = fuseMkDir;
 }
 
 CFuse::~CFuse()
@@ -411,6 +412,43 @@ int CFuse::fuseFtruncate(const char *path, off_t offset, struct fuse_file_info *
 			return -EISDIR;
 
 		oneDrive->truncateItem(driveItem, offset);
+	} catch (const std::exception &e) {
+		LOG_ERROR("an exception was caught: " << e.what());
+		err = -EIO;
+	} catch (...) {
+		LOG_ERROR("an unknown exception was caught");
+		err = -EIO;
+	}
+
+	return err;
+}
+
+int CFuse::fuseMkDir(const char *path, mode_t /*mode*/)
+{
+	int err = 0;
+	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
+
+	if (!oneDrive)
+		return -EIO;
+
+	try {
+		std::string __path = path;
+		std::size_t p = __path.rfind('/');
+
+		if (p == std::string::npos)
+			return -EINVAL;
+
+		std::string dir = __path.substr(0, p);
+
+		CDriveItem driveItem = oneDrive->itemFromPath(dir);
+
+		if (driveItem.type() == CDriveItem::DRIVE_ITEM_UNKNOWN)
+			return -ENOENT;
+
+		if (driveItem.type() != CDriveItem::DRIVE_ITEM_FILE)
+			return -EISDIR;
+
+		//oneDrive->truncateItem(driveItem, offset);
 	} catch (const std::exception &e) {
 		LOG_ERROR("an exception was caught: " << e.what());
 		err = -EIO;
