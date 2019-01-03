@@ -8,18 +8,22 @@
 
 namespace {
 
+const char userHashAttr[] = "user.hash";
+
 } // anonymouse namespace
 
 namespace OneDrive {
 
 CFuse::CFuse()
 {
-	fuseOps_.init    = fuseInit;
-	fuseOps_.destroy = fuseDestroy;
-	fuseOps_.getattr = fuseGetAttr;
-	fuseOps_.open    = fuseOpen;
-	fuseOps_.release = fuseRelease;
-	fuseOps_.readdir = fuseReadDir;
+	fuseOps_.init      = fuseInit;
+	fuseOps_.destroy   = fuseDestroy;
+	fuseOps_.getattr   = fuseGetAttr;
+	fuseOps_.open      = fuseOpen;
+	fuseOps_.release   = fuseRelease;
+	fuseOps_.readdir   = fuseReadDir;
+	fuseOps_.listxattr = fuseListXAttr;
+	fuseOps_.getxattr  = fuseGetXAttr;
 }
 
 CFuse::~CFuse()
@@ -53,6 +57,9 @@ int CFuse::fuseGetAttr(const char *path, struct stat *st)
 	try {
 		CDriveItem driveItem = oneDrive->itemFromPath(path);
 
+		if (driveItem.type() == CDriveItem::DRIVE_ITEM_UNKNOWN)
+			return -ENOENT;
+
 		std::memset(st, 0, sizeof(*st));
 
 		st->st_uid = getuid();
@@ -79,9 +86,25 @@ int CFuse::fuseGetAttr(const char *path, struct stat *st)
 	return err;
 }
 
-int CFuse::fuseOpen(const char * /*path*/, struct fuse_file_info * /*fileInfo*/)
+int CFuse::fuseOpen(const char *path, struct fuse_file_info * /*fileInfo*/)
 {
-	return -ENOSYS;
+	int err = 0;
+	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
+
+	try {
+		CDriveItem driveItem = oneDrive->itemFromPath(path);
+
+		if (driveItem.type() == CDriveItem::DRIVE_ITEM_UNKNOWN)
+			return -ENOENT;
+	} catch (const std::exception &e) {
+		LOG_ERROR("an exception was caught: " << e.what());
+		err = -ENOENT;
+	} catch (...) {
+		LOG_ERROR("an unknown exception was caught");
+		err = -ENOENT;
+	}
+
+	return err;
 }
 
 int CFuse::fuseRelease(const char * /*path*/, struct fuse_file_info * /*fileInfo*/)
@@ -97,6 +120,9 @@ int CFuse::fuseReadDir(const char *path, void *buf, fuse_fill_dir_t fillDir,
 
 	try {
 		CDriveItem driveItem = oneDrive->itemFromPath(path);
+
+		if (driveItem.type() == CDriveItem::DRIVE_ITEM_UNKNOWN)
+			return -ENOENT;
 
 		std::list<CDriveItem> driveItems;
 
@@ -122,6 +148,77 @@ int CFuse::fuseReadDir(const char *path, void *buf, fuse_fill_dir_t fillDir,
 			if (fillDir(buf, i.name().c_str(), &st, 0))
 				break;
 		}
+	} catch (const std::exception &e) {
+		LOG_ERROR("an exception was caught: " << e.what());
+		err = -EIO;
+	} catch (...) {
+		LOG_ERROR("an unknown exception was caught");
+		err = -EIO;
+	}
+
+	return err;
+}
+
+int CFuse::fuseListXAttr(const char *path, char *buf, size_t size)
+{
+	int err = 0;
+	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
+
+	try {
+		CDriveItem driveItem = oneDrive->itemFromPath(path);
+
+		if (driveItem.type() == CDriveItem::DRIVE_ITEM_UNKNOWN)
+			return -ENOENT;
+
+		if (driveItem.type() != CDriveItem::DRIVE_ITEM_FILE)
+			return 0;
+
+		if (driveItem.hash().empty())
+			return 0;
+
+		if (!buf)
+			err = sizeof(userHashAttr);
+		else if (size < sizeof(userHashAttr))
+			err = -ERANGE;
+		else {
+			memcpy(buf, userHashAttr, sizeof(userHashAttr));
+			err = sizeof(userHashAttr);
+		}
+	} catch (const std::exception &e) {
+		LOG_ERROR("an exception was caught: " << e.what());
+		err = -EIO;
+	} catch (...) {
+		LOG_ERROR("an unknown exception was caught");
+		err = -EIO;
+	}
+
+	return err;
+}
+
+int CFuse::fuseGetXAttr(const char *path, const char *name, char *buf, size_t size)
+{
+	int err = 0;
+	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
+
+	try {
+		if (strcmp(name, userHashAttr))
+			return -ENODATA;
+
+		CDriveItem driveItem = oneDrive->itemFromPath(path);
+
+		if (driveItem.type() == CDriveItem::DRIVE_ITEM_UNKNOWN)
+			return -ENOENT;
+
+		if (driveItem.type() != CDriveItem::DRIVE_ITEM_FILE)
+			return 0;
+
+		if (driveItem.hash().empty())
+			return 0;
+
+		if (!buf)
+			err = driveItem.hash().length();
+		else
+			err = snprintf(buf, size, "%s", driveItem.hash().c_str());
 	} catch (const std::exception &e) {
 		LOG_ERROR("an exception was caught: " << e.what());
 		err = -EIO;

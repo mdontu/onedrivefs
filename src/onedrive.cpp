@@ -174,6 +174,8 @@ CDriveItem COneDrive::itemFromPath(const std::string &path)
 	CDriveItem driveItem = root();
 
 	for (auto &&i : items) {
+		bool found = false;
+
 		if (i.empty())
 			continue;
 
@@ -184,10 +186,13 @@ CDriveItem COneDrive::itemFromPath(const std::string &path)
 		for (auto &&j : driveItems) {
 			if (j.name() == i) {
 				driveItem = j;
+				found = true;
 				break;
 			}
 		}
 
+		if (!found)
+			return CDriveItem();
 	}
 
 	return driveItem;

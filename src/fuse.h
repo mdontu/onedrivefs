@@ -37,6 +37,10 @@ private:
 
 	static int fuseReadDir(const char *path, void *buf, fuse_fill_dir_t fillDir,
 			       off_t offset, struct fuse_file_info *);
+
+	static int fuseListXAttr(const char *path, char *buf, size_t size);
+
+	static int fuseGetXAttr(const char *path, const char *name, char *buf, size_t size);
 };
 
 } // namespace OneDrive
