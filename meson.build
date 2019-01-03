@@ -23,4 +23,4 @@ vflag = ['-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), 'src/
 
 executable('onedrivefs', src,
            dependencies : [libcurl_dep, jsoncpp_dep, fuse_dep],
-           link_args : vflag)
+           link_args : vflag, install : true)
