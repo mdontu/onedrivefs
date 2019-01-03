@@ -71,7 +71,7 @@ int CFuse::fuseGetAttr(const char *path, struct stat *st)
 			st->st_size = 4096;
 			st->st_mode = S_IFDIR | S_IXUSR | S_IRUSR | S_IWUSR | S_IXGRP | S_IRGRP | S_IXOTH | S_IROTH;
 		} else if (driveItem.type() == CDriveItem::DRIVE_ITEM_FILE) {
-			st->st_size = std::stoll(driveItem.size());
+			st->st_size = std::stoull(driveItem.size());
 			st->st_mode = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 		}
 		oneDrive->driveItemTime(driveItem.createTime(), st->st_ctim);
@@ -140,7 +140,7 @@ int CFuse::fuseReadDir(const char *path, void *buf, fuse_fill_dir_t fillDir,
 				st.st_size = 4096;
 				st.st_mode = S_IFDIR | S_IXUSR | S_IRUSR | S_IWUSR | S_IXGRP | S_IRGRP | S_IXOTH | S_IROTH;
 			} else if (i.type() == CDriveItem::DRIVE_ITEM_FILE) {
-				st.st_size = std::stoll(i.size());
+				st.st_size = std::stoull(i.size());
 				st.st_mode = S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 			}
 			oneDrive->driveItemTime(i.createTime(), st.st_ctim);
@@ -250,8 +250,8 @@ int CFuse::fuseStatFs(const char *path, struct statvfs *st)
 
 		st->f_bsize = 4096;
 		st->f_frsize = 4096;
-		st->f_blocks = std::stoll(drive.quota().total()) / st->f_frsize;
-		st->f_bfree = (std::stoll(drive.quota().total()) - std::stoll(drive.quota().used())) / st->f_bsize;
+		st->f_blocks = std::stoull(drive.quota().total()) / st->f_frsize;
+		st->f_bfree = (std::stoull(drive.quota().total()) - std::stoull(drive.quota().used())) / st->f_bsize;
 		st->f_bavail = st->f_bfree;
 		st->f_namemax = 1024;
 	} catch (const std::exception &e) {
