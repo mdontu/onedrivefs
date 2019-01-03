@@ -27,6 +27,7 @@ CFuse::CFuse()
 	fuseOps_.getxattr  = fuseGetXAttr;
 	fuseOps_.statfs    = fuseStatFs;
 	fuseOps_.unlink    = fuseUnlink;
+	fuseOps_.rmdir     = fuseRmDir;
 }
 
 CFuse::~CFuse()
@@ -306,6 +307,39 @@ int CFuse::fuseUnlink(const char *path)
 
 		if (driveItem.type() != CDriveItem::DRIVE_ITEM_FILE)
 			return -EISDIR;
+
+		oneDrive->deleteItem(driveItem);
+	} catch (const std::exception &e) {
+		LOG_ERROR("an exception was caught: " << e.what());
+		err = -EIO;
+	} catch (...) {
+		LOG_ERROR("an unknown exception was caught");
+		err = -EIO;
+	}
+
+	return err;
+}
+
+int CFuse::fuseRmDir(const char *path)
+{
+	int err = 0;
+	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
+
+	try {
+		CDriveItem driveItem = oneDrive->itemFromPath(path);
+
+		if (driveItem.type() == CDriveItem::DRIVE_ITEM_UNKNOWN)
+			return -ENOENT;
+
+		if (driveItem.type() != CDriveItem::DRIVE_ITEM_FOLDER)
+			return -ENOTDIR;
+
+		std::list<CDriveItem> driveItems;
+
+		oneDrive->listChildren(driveItem, driveItems);
+
+		if (driveItems.size() > 0)
+			return -ENOTEMPTY;
 
 		oneDrive->deleteItem(driveItem);
 	} catch (const std::exception &e) {

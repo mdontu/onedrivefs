@@ -48,6 +48,8 @@ private:
 			    struct fuse_file_info *fileInfo);
 
 	static int fuseUnlink(const char *path);
+
+	static int fuseRmDir(const char *path);
 };
 
 } // namespace OneDrive
