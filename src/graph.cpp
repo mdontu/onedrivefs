@@ -132,11 +132,11 @@ void CGraph::request(const std::string &resource, std::ofstream &file)
 			refreshToken();
 			gConfig.readToken();
 		} else if (respCode != 200)
-			throw std::runtime_error("HTTP error while downloading: " + std::to_string(respCode));
+			throw std::runtime_error("the server responded with: " + std::to_string(respCode));
 	} while (respCode != 200 && retries-- > 0);
 
 	if (respCode != 200)
-		throw std::runtime_error("HTTP error while downloading: " + std::to_string(respCode));
+		throw std::runtime_error("the server responded with: " + std::to_string(respCode));
 }
 
 size_t CGraph::request(const std::string &url, void *buf, size_t size, off_t offset)
@@ -191,11 +191,11 @@ void CGraph::deleteRequest(const std::string &resource)
 			refreshToken();
 			gConfig.readToken();
 		} else if (respCode != 204)
-			throw std::runtime_error("HTTP error while downloading: " + std::to_string(respCode));
+			throw std::runtime_error("HTTP error while deleting: " + std::to_string(respCode));
 	} while (respCode == 401 && retries-- > 0);
 
 	if (respCode != 204)
-		throw std::runtime_error("HTTP error while downloading: " + std::to_string(respCode));
+		throw std::runtime_error("HTTP error while deleting: " + std::to_string(respCode));
 }
 
 } // namespace OneDrive
