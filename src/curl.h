@@ -25,6 +25,9 @@ public:
 	std::string get(const std::string &url, const std::list<std::string> &headers,
 			long &respCode);
 
+	size_t get(const std::string &url, const std::list<std::string> &headers,
+		   void *buf, size_t size, long &respCode);
+
 	std::string post(const std::string &url, const std::list<std::string> &headers,
 			 const std::string &body, long &respCode);
 
@@ -46,6 +49,8 @@ private:
 	long perform();
 
 	static size_t writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata);
+
+	static size_t writeBufferCallback(char *ptr, size_t size, size_t nmemb, void *userdata);
 
 	static size_t downloadCallback(char *ptr, size_t size, size_t nmemb, void *userdata);
 

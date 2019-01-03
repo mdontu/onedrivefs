@@ -26,6 +26,12 @@ private:
 	CCurlGlobal & operator=(const CCurlGlobal &) = delete;
 } globalCurl;
 
+struct DownloadBuffer {
+	void *buf;
+	size_t size;
+	size_t pos;
+};
+
 } // anonymous namespace
 
 namespace OneDrive {
@@ -93,6 +99,39 @@ std::string CCurl::get(const std::string &url, const std::list<std::string> &hea
 	respCode = perform();
 
 	return buf;
+}
+
+size_t CCurl::get(const std::string &url, const std::list<std::string> &headers,
+		void *buf, size_t size, long &respCode)
+{
+	struct curl_slist *slist = nullptr;
+
+	for (auto &&h : headers)
+		slist = curl_slist_append(slist, h.c_str());
+
+	std::unique_ptr<struct curl_slist, decltype(&curl_slist_free_all)> sp(slist, &curl_slist_free_all);
+
+	setopt(CURLOPT_HTTPHEADER, slist);
+
+	DownloadBuffer db{};
+	db.buf = buf;
+	db.size = size;
+
+	setopt(CURLOPT_WRITEDATA, static_cast<void *>(&db));
+	setopt(CURLOPT_WRITEFUNCTION, reinterpret_cast<void *>(writeBufferCallback));
+
+	setopt(CURLOPT_HTTPGET, 1);
+	setopt(CURLOPT_URL, url);
+
+	setopt(CURLOPT_SSL_VERIFYPEER, 1);
+	setopt(CURLOPT_SSL_VERIFYHOST, 2);
+	setopt(CURLOPT_TIMEOUT, 10);
+	setopt(CURLOPT_CONNECTTIMEOUT, 30);
+	setopt(CURLOPT_FOLLOWLOCATION, 1);
+
+	respCode = perform();
+
+	return db.pos;
 }
 
 std::string CCurl::post(const std::string &url, const std::list<std::string> &headers, const std::string &body,
@@ -184,6 +223,22 @@ size_t CCurl::writeCallback(char *ptr, size_t size, size_t nmemb, void *userData
 	}
 
 	return size * nmemb;
+}
+
+size_t CCurl::writeBufferCallback(char *ptr, size_t size, size_t nmemb, void *userData)
+{
+	if (!userData)
+		return 0;
+
+	DownloadBuffer *db = static_cast<DownloadBuffer *>(userData);
+
+	size_t n = std::min(size * nmemb, db->size - db->pos);
+
+	memcpy(static_cast<char *>(db->buf) + db->pos, ptr, n);
+
+	db->pos += n;
+
+	return n;
 }
 
 size_t CCurl::downloadCallback(char *ptr, size_t size, size_t nmemb, void *userData)

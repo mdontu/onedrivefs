@@ -20,6 +20,7 @@ CFuse::CFuse()
 	fuseOps_.destroy   = fuseDestroy;
 	fuseOps_.getattr   = fuseGetAttr;
 	fuseOps_.open      = fuseOpen;
+	fuseOps_.read      = fuseRead;
 	fuseOps_.release   = fuseRelease;
 	fuseOps_.readdir   = fuseReadDir;
 	fuseOps_.listxattr = fuseListXAttr;
@@ -247,6 +248,33 @@ int CFuse::fuseStatFs(const char *path, struct statvfs *st)
 		st->f_bfree = (std::stoll(drive.quota().total()) - std::stoll(drive.quota().used())) / st->f_bsize;
 		st->f_bavail = st->f_bfree;
 		st->f_namemax = 1024;
+	} catch (const std::exception &e) {
+		LOG_ERROR("an exception was caught: " << e.what());
+		err = -EIO;
+	} catch (...) {
+		LOG_ERROR("an unknown exception was caught");
+		err = -EIO;
+	}
+
+	return err;
+}
+
+int CFuse::fuseRead(const char *path, char *buf, size_t size, off_t offset,
+		    struct fuse_file_info *fileInfo)
+{
+	int err = 0;
+	COneDrive *oneDrive = static_cast<COneDrive *>(fuse_get_context()->private_data);
+
+	try {
+		CDriveItem driveItem = oneDrive->itemFromPath(path);
+
+		if (driveItem.type() == CDriveItem::DRIVE_ITEM_UNKNOWN)
+			return -ENOENT;
+
+		if (driveItem.type() != CDriveItem::DRIVE_ITEM_FILE)
+			return -EISDIR;
+
+		err = oneDrive->read(driveItem, buf, size, offset);
 	} catch (const std::exception &e) {
 		LOG_ERROR("an exception was caught: " << e.what());
 		err = -EIO;

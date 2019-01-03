@@ -139,4 +139,35 @@ void CGraph::request(const std::string &resource, std::ofstream &file)
 		throw std::runtime_error("HTTP error while downloading: " + std::to_string(respCode));
 }
 
+size_t CGraph::request(const std::string &url, void *buf, size_t size, off_t offset)
+{
+	size_t ret = 0;
+
+	long respCode;
+
+	unsigned int retries = 3;
+
+	do {
+		std::list<std::string> headers;
+
+		headers.emplace_back(std::string("Authorization: " + gConfig.tokenType() + " " + gConfig.token()));
+		headers.emplace_back(std::string("Range: bytes=" + std::to_string(offset) + "-" + std::to_string(offset + size - 1)));
+
+		respCode = 0;
+
+		ret = httpClient_.get(url, headers, buf, size, respCode);
+
+		if (respCode == 401) {
+			refreshToken();
+			gConfig.readToken();
+		} else if (respCode != 206)
+			throw std::runtime_error("HTTP error while downloading: " + std::to_string(respCode));
+	} while (respCode != 206 && retries-- > 0);
+
+	if (respCode != 206)
+		throw std::runtime_error("HTTP error while downloading: " + std::to_string(respCode));
+
+	return ret;
+}
+
 } // namespace OneDrive

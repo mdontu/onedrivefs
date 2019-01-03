@@ -38,7 +38,8 @@ OneDrive::CDriveItem driveItemFromJson(const Json::Value &node)
 		type = OneDrive::CDriveItem::DRIVE_ITEM_FILE;
 
 	OneDrive::CDriveItem driveItem(node["id"].asString(), node["name"].asString(), node["size"].asString(),
-				       node["createdDateTime"].asString(), node["lastModifiedDateTime"].asString(), type);
+				       node["createdDateTime"].asString(), node["lastModifiedDateTime"].asString(),
+				       node["@microsoft.graph.downloadUrl"].asString(), type);
 
 	if (!!node["file"] && !!node["file"]["hashes"] && !!node["file"]["hashes"]["sha1Hash"])
 		driveItem.setHash(node["file"]["hashes"]["sha1Hash"].asString());
@@ -207,6 +208,13 @@ void COneDrive::driveItemTime(const std::string &s, struct timespec &ts)
 
 	ts.tv_sec = std::mktime(&tm);
 	ts.tv_nsec = 0;
+}
+
+size_t COneDrive::read(const CDriveItem &driveItem, void *buf, size_t size, off_t offset)
+{
+	std::lock_guard<std::mutex> lock(mutex_);
+
+	return graph_.request(driveItem.url(), buf, size, offset);
 }
 
 } // namespace OneDrive

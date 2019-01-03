@@ -29,6 +29,8 @@ public:
 
 	void request(const std::string &resource, std::ofstream &file);
 
+	size_t request(const std::string &url, void *buf, size_t size, off_t offset);
+
 private:
 	CCurl httpClient_;
 

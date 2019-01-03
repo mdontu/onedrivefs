@@ -201,15 +201,16 @@ public:
 	}
 
 	CDriveItem(const std::string &id, const std::string &name, const std::string &size,
-		   const std::string &createTime, const std::string &modifiedTime, DriveItemType type):
+		   const std::string &createTime, const std::string &modifiedTime,
+		   const std::string &url, DriveItemType type):
 			id_{id}, name_{name}, size_{size}, createTime_{createTime}, modifiedTime_{modifiedTime},
-			type_{type}
+			url_{url}, type_{type}
 	{
 	}
 
 	CDriveItem(const CDriveItem &driveItem): id_{driveItem.id_}, name_{driveItem.name_},
 		size_{driveItem.size_}, createTime_{driveItem.createTime_}, modifiedTime_{driveItem.modifiedTime_},
-		type_{driveItem.type_}, hash_{driveItem.hash_}
+		url_{driveItem.url_}, type_{driveItem.type_}, hash_{driveItem.hash_}
 	{
 	}
 
@@ -220,6 +221,7 @@ public:
 		size_         = driveItem.size_;
 		createTime_   = driveItem.createTime_;
 		modifiedTime_ = driveItem.modifiedTime_;
+		url_          = driveItem.url_;
 		type_         = driveItem.type_;
 		hash_         = driveItem.hash_;
 
@@ -255,6 +257,11 @@ public:
 		return modifiedTime_;
 	}
 
+	std::string url() const
+	{
+		return url_;
+	}
+
 	DriveItemType type() const
 	{
 		return type_;
@@ -281,6 +288,7 @@ private:
 	std::string   size_;
 	std::string   createTime_;
 	std::string   modifiedTime_;
+	std::string   url_;
 	DriveItemType type_{DRIVE_ITEM_UNKNOWN};
 	std::string   hash_;
 };
@@ -314,6 +322,8 @@ public:
 	CDriveItem itemFromPath(const std::string &path);
 
 	void driveItemTime(const std::string &s, struct timespec &ts);
+
+	size_t read(const CDriveItem &driveItem, void *buf, size_t size, off_t offset);
 
 private:
 	CGraph     graph_;
