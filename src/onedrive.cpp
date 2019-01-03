@@ -229,6 +229,12 @@ void COneDrive::driveItemTime(const std::string &s, struct timespec &ts)
 
 size_t COneDrive::read(const CDriveItem &driveItem, void *buf, size_t size, off_t offset)
 {
+	if (offset > std::stoll(driveItem.size()))
+		return 0;
+
+	if ((offset + size) > std::stoull(driveItem.size()))
+		size = std::stoull(driveItem.size()) - offset;
+
 	std::lock_guard<std::mutex> lock(mutex_);
 
 	return graph_.request(driveItem.url(), buf, size, offset);
