@@ -7,7 +7,7 @@ add_project_arguments(['-fno-strict-aliasing',
                        '-ffunction-sections',
                        '-fdata-sections'], language : 'cpp')
 
-libcurl_dep = dependency('libcurl', version : '>= 7.58')
+libcurl_dep = dependency('libcurl', version : '>= 7.47')
 jsoncpp_dep = dependency('jsoncpp', version : '>= 1.7')
 fuse_dep = dependency('fuse', version : '>= 2.9')
 
