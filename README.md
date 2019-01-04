@@ -60,6 +60,7 @@ In order to build the executable do:
 * Writes are not supported
 * Copying files is not very fast. Use `dd` with a large block size (1MiB or more) as each `read()` translates into an HTTPS request
 * Deleting files moves them to Recycle Bin
+* Directory listings are limited to 200 entries
 
 ## Resources
 
