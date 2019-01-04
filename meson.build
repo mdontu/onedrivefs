@@ -7,8 +7,8 @@ add_project_arguments(['-fno-strict-aliasing',
                        '-ffunction-sections',
                        '-fdata-sections'], language : 'cpp')
 
-libcurl_dep = dependency('libcurl', version : '>= 7.63')
-jsoncpp_dep = dependency('jsoncpp', version : '>= 1.8')
+libcurl_dep = dependency('libcurl', version : '>= 7.58')
+jsoncpp_dep = dependency('jsoncpp', version : '>= 1.7')
 fuse_dep = dependency('fuse', version : '>= 2.9')
 
 src = ['src/appconfig.cpp',

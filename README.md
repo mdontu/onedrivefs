@@ -38,8 +38,8 @@ and if you want to remove the mount:
 You will need:
 
 * gcc >= 4.8.1
-* libcurl >= 7.63
-* jsoncpp >= 1.8
+* libcurl >= 7.58
+* jsoncpp >= 1.7
 * fuse >= 2.9
 * meson
 * ninja
